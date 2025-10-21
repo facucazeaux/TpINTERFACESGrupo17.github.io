@@ -1,41 +1,35 @@
 /* ===================== HERO Collins-like ===================== */
-/* ===================== HERO Collins-like (a prueba de nulos) ===================== */
 const cards = document.querySelectorAll('.collins-container .ui-card');
 const prevBtn = document.getElementById('hero-prev');
 const nextBtn = document.getElementById('hero-next');
 const breadcrumb = document.querySelectorAll('.hero-breadcrumb .breadcrumb-item');
 const heroRoot = document.querySelector('.collins-hero');
 
+if (!cards.length) {
+  console.warn('No hay cartas en el hero.');
+}
+
 let current = 0;
 let animating = false;
 
-const hasCards = () => cards && cards.length > 0;
-const norm = (i, m) => ((i % m) + m) % m;
+const mod = (n, m) => ((n % m) + m) % m;
+const prevIndex = i => mod(i - 1, cards.length);
+const nextIndex = i => mod(i + 1, cards.length);
 
+
+if (cards.length) {
 function applyClasses(center){
-  if (!hasCards()) return;                        // nada que hacer
-  if (center < 0 || center >= cards.length) {     // índice fuera de rango
-    console.warn('center fuera de rango, reseteo a 0');
-    center = 0;
-  }
-  // limpiar
-  cards.forEach(c => c.className = 'ui-card');
-
-  // asignar clases con optional chaining
-  cards[center]?.classList.add('active');
-
-  // prev/next “seguros” aunque haya 1 o 2 cartas
-  const prev = norm(center - 1, cards.length);
-  const next = norm(center + 1, cards.length);
-  cards[prev]?.classList.add('prev');
-  cards[next]?.classList.add('next');
+  cards.forEach(c => c.className = 'ui-card'); // limpia
+  cards[center].classList.add('active');
+  cards[prevIndex(center)].classList.add('prev');
+  cards[nextIndex(center)].classList.add('next');
 }
 
 function updateBreadcrumb(){
-  if (!breadcrumb.length || !hasCards()) return;
+  if (!breadcrumb.length) return;
   breadcrumb.forEach((b, i) => b.classList.toggle('active', i === current));
 }
-
+}
 function tilt(dir){
   if (!heroRoot) return;
   heroRoot.classList.add(dir === 'right' ? 'tilt-right' : 'tilt-left');
@@ -43,46 +37,89 @@ function tilt(dir){
 }
 
 function show(index, dir){
-  if (!hasCards()) return;
-  // normalizo índice SIEMPRE para que nunca quede fuera de rango
-  index = norm(index, cards.length);
-  if (animating || index === current) return;
-
+  if (animating || index === current || index < 0 || index >= cards.length) return;
   animating = true;
   tilt(dir);
   current = index;
+  
   applyClasses(current);
   updateBreadcrumb();
   setTimeout(() => { animating = false; }, 600);
 }
 
-/* Init solo si hay cartas */
-let heroTimer = null;
-if (hasCards()) {
-  console.log('Cartas en hero:', cards.length);
+/* Auto slide */
+let timer = setInterval(() => show(nextIndex(current), 'right'), 4000);
+function resetTimer(){
+  clearInterval(timer);
+  timer = setInterval(() => show(nextIndex(current), 'right'), 4000);
+}
+
+/* Flechas */
+prevBtn?.addEventListener('click', () => { show(prevIndex(current), 'left'); resetTimer(); });
+nextBtn?.addEventListener('click', () => { show(nextIndex(current), 'right'); resetTimer(); });
+
+/* Click en cartas vecinas */
+cards.forEach((card, i) => {
+  card.addEventListener('click', () => {
+    if (card.classList.contains('prev')) { show(i, 'left'); resetTimer(); }
+    else if (card.classList.contains('next')) { show(i, 'right'); resetTimer(); }
+  });
+});
+
+/* Teclado */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft')  { prevBtn?.click(); }
+  if (e.key === 'ArrowRight') { nextBtn?.click(); }
+});
+
+/* Init */
+
+if (cards.length) {
   applyClasses(current);
   updateBreadcrumb();
-
-  heroTimer = setInterval(() => show(current + 1, 'right'), 4000);
-  const resetTimer = () => { clearInterval(heroTimer); heroTimer = setInterval(() => show(current + 1, 'right'), 4000); };
-
-  prevBtn?.addEventListener('click', () => { show(current - 1, 'left');  resetTimer(); });
-  nextBtn?.addEventListener('click', () => { show(current + 1, 'right'); resetTimer(); });
-
-  cards.forEach((card, i) => {
-    card.addEventListener('click', () => {
-      if (card.classList.contains('prev'))  { show(i, 'left');  resetTimer(); }
-      else if (card.classList.contains('next')) { show(i, 'right'); resetTimer(); }
-    });
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft')  prevBtn?.click();
-    if (e.key === 'ArrowRight') nextBtn?.click();
-  });
-} else {
-  console.warn('No hay cartas en el hero. (cards.length = 0)');
 }
+
+
+/* ===== Menú hamburguesa: abrir/cerrar ===== */
+const hamburger = document.getElementById('hamburger');
+const sideMenu  = document.getElementById('menu-categorias');
+const backdrop  = document.getElementById('menu-backdrop');
+const closeBtn  = document.querySelector('.close-menu');
+
+function openMenu(){
+  sideMenu.classList.add('open');
+  backdrop.classList.add('show');
+  document.body.classList.add('menu-open');
+  hamburger?.setAttribute('aria-expanded','true');
+  sideMenu?.setAttribute('aria-hidden','false');
+}
+function closeMenu(){
+  sideMenu.classList.remove('open');
+  backdrop.classList.remove('show');
+  document.body.classList.remove('menu-open');
+  hamburger?.setAttribute('aria-expanded','false');
+  sideMenu?.setAttribute('aria-hidden','true');
+}
+function toggleMenu(){
+  sideMenu.classList.contains('open') ? closeMenu() : openMenu();
+}
+
+hamburger?.addEventListener('click', toggleMenu);
+hamburger?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); }
+});
+
+backdrop?.addEventListener('click', closeMenu);
+closeBtn?.addEventListener('click', closeMenu);
+
+/* Cerrar con ESC */
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+
+/* Cerrar al hacer click en una categoría */
+sideMenu?.addEventListener('click', (e) => {
+  const link = e.target.closest('.cat-btn');
+  if (link) closeMenu();
+});
 
 
 /* ===================== LOGIN ===================== */
@@ -148,21 +185,28 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ===================== REGISTRO ===================== */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('registroForm');
-  const btn  = document.getElementById('submitBtn');
-  if (!form || !btn) return;
+  console.log('Registro listo - script corriendo');
 
+  const form = document.getElementById('registroForm');
+  const btn = document.getElementById('submitBtn');
   const captcha = form.querySelector('input[type="checkbox"][required]');
+  const inputs = form.querySelectorAll('input[required]');
   const msg = document.getElementById('error-msg');
+
+  if (!form || !btn) {
+    console.error('No se encontró el form o el botón. Revisá los IDs.');
+    return;
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Validación HTML nativa
+    // Validación nativa del form
     if (!form.reportValidity()) return;
 
-    const pass1 = document.getElementById('password')?.value.trim() ?? '';
-    const pass2 = document.getElementById('password2')?.value.trim() ?? '';
+    // Validar contraseñas iguales
+    const pass1 = document.getElementById('password').value.trim();
+    const pass2 = document.getElementById('password2').value.trim();
 
     if (pass1 !== pass2) {
       msg.textContent = 'Las contraseñas no coinciden.';
@@ -172,28 +216,125 @@ document.addEventListener('DOMContentLoaded', () => {
       msg.classList.remove('is-visible');
     }
 
-    if (!captcha?.checked) {
-      msg.textContent = 'Marcá el captcha.';
-      msg.classList.add('is-visible');
-      return;
-    }
-
+    // Deshabilitar botón y mostrar carga
     btn.disabled = true;
     btn.textContent = 'Creando cuenta...';
     btn.style.opacity = '0.8';
 
+    // Simular registro
     await new Promise((res) => setTimeout(res, 1200));
 
+    // Efecto de éxito (igual que login)
     btn.textContent = '✔ ¡Registro exitoso!';
-    btn.style.background = '#10B981';
+    btn.style.background = '#10B981'; // verde
     btn.style.borderColor = '#059669';
 
+    // Redirigir al login
     setTimeout(() => {
       window.location.href = 'login.html';
     }, 1500);
   });
 });
 
+/*==============================================================================*/
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Registro listo - script corriendo');
+
+  const form = document.getElementById('registroForm');
+  const btn = document.getElementById('submitBtn');
+  const captcha = form.querySelector('input[type="checkbox"][required]');
+  const inputs = form.querySelectorAll('input[required]');
+  const msg = document.getElementById('error-msg');
+
+  if (!form || !btn) {
+    console.error('No se encontró el form o el botón. Revisá los IDs.');
+    return;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Validación nativa del form
+    if (!form.reportValidity()) return;
+
+    // Validar contraseñas iguales
+    const pass1 = document.getElementById('password').value.trim();
+    const pass2 = document.getElementById('password2').value.trim();
+
+    if (pass1 !== pass2) {
+      msg.textContent = 'Las contraseñas no coinciden.';
+      msg.classList.add('is-visible');
+      return;
+    } else {
+      msg.classList.remove('is-visible');
+    }
+
+    // Deshabilitar botón y mostrar carga
+    btn.disabled = true;
+    btn.textContent = 'Creando cuenta...';
+    btn.style.opacity = '0.8';
+
+    // Simular registro
+    await new Promise((res) => setTimeout(res, 1200));
+
+    // Efecto de éxito (igual que login)
+    btn.textContent = '✔ ¡Registro exitoso!';
+    btn.style.background = '#10B981'; // verde
+    btn.style.borderColor = '#059669';
+
+    // Redirigir al login
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 1500);
+  });
+});
+
+
+/*==============================================================================*/
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Login listo - script cargado');
+
+  const form = document.querySelector('.form');
+  const inputs = form.querySelectorAll('input[required]');
+  const captcha = form.querySelector('input[type="checkbox"][required]');
+  const btn = form.querySelector('.btn');
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    // Validación general de campos requeridos
+    let valido = true;
+    inputs.forEach(input => {
+      if (!input.value.trim()) valido = false;
+    });
+
+    // Verificar captcha
+    if (!captcha.checked) valido = false;
+
+    if (!valido) {
+      mostrarError('Por favor, completá todos los campos y marcá el captcha.');
+      return;
+    }
+
+    // Deshabilitar botón y mostrar animación de carga
+    btn.disabled = true;
+    btn.textContent = 'Iniciando sesión...';
+    btn.style.opacity = '0.8';
+
+    // Simular carga (como si verificara usuario)
+    setTimeout(() => {
+      btn.textContent = '✔ Sesión iniciada';
+      btn.style.background = '#10B981'; 
+      btn.style.borderColor = '#059669';
+
+      // Redirigir después de 1.5 segundos
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1500);
+    }, 1200);
+  });
 
   function mostrarError(mensaje) {
     let error = document.getElementById('login-error');
@@ -207,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     error.textContent = mensaje;
   }
-
+});
 
 /* ===================== LOADER ===================== */
 
@@ -366,42 +507,4 @@ document.addEventListener('DOMContentLoaded', () => {
     ensureBreadcrumb();
     applyPosition();
   });
-});
-
-
-
-/* ===================== MENÚ HAMBURGUESA (guardado) ===================== */
-const hamburger = document.getElementById('hamburger');
-const sideMenu  = document.getElementById('menu-categorias');
-const backdrop  = document.getElementById('menu-backdrop');
-const closeBtn  = document.querySelector('.close-menu');
-
-function openMenu(){
-  sideMenu?.classList.add('open');
-  backdrop?.classList.add('show');
-  document.body.classList.add('menu-open');
-  hamburger?.setAttribute('aria-expanded','true');
-  sideMenu?.setAttribute('aria-hidden','false');
-}
-function closeMenu(){
-  sideMenu?.classList.remove('open');
-  backdrop?.classList.remove('show');
-  document.body.classList.remove('menu-open');
-  hamburger?.setAttribute('aria-expanded','false');
-  sideMenu?.setAttribute('aria-hidden','true');
-}
-function toggleMenu(){
-  sideMenu?.classList.contains('open') ? closeMenu() : openMenu();
-}
-
-hamburger?.addEventListener('click', toggleMenu);
-hamburger?.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); }
-});
-backdrop?.addEventListener('click', closeMenu);
-closeBtn?.addEventListener('click', closeMenu);
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
-sideMenu?.addEventListener('click', (e) => {
-  const link = e.target.closest?.('.cat-btn');
-  if (link) closeMenu();
 });

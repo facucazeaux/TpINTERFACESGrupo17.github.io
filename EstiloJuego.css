@@ -474,6 +474,14 @@ body.menu-open {
   justify-self: end;
 }
 
+ .galeria h2, .galeria p  
+ {
+  font-size: 22px;
+  margin-top: 12px;
+  margin-bottom: 30px;
+  color: #E5E7EB;
+ }
+
 .instrucciones h2 {
   font-size: 22px;
   margin-top: 12px;
