@@ -17,6 +17,8 @@
 
 }
 
+
+
 .pcnt-label { margin-right: 6px; }
 #pieceCount {
   background:#0f1017; color:#fff; border:1px solid #394150;
@@ -377,3 +379,64 @@
   .carrusel-item { width: 70vw; aspect-ratio: 16 / 11; }
 }
 
+
+
+/*POP emergente cuando ganas */
+
+
+/* Estado de victoria en el grid */
+#grid.won .tile {
+  pointer-events: none;
+}
+
+/* Pop + glow por ficha */
+@keyframes tile-pop {
+  0%   { transform: scale(1);    filter: brightness(1);   }
+  50%  { transform: scale(1.08); filter: brightness(1.15);}
+  100% { transform: scale(1);    filter: brightness(1);   }
+}
+.tile.win-pop {
+   animation: tile-pop 320ms ease both; /* <- both para que mantenga el estado final durante la anim */
+
+  
+  box-shadow: 0 0 0px rgba(236,72,153,0); /* acento */
+}
+
+/* Destello rápido (sobre el grid) */
+.win-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.22), rgba(255,255,255,0) 60%);
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+.win-flash.on { opacity: 1; }
+
+/* Banner sutil de “¡Ganaste!” */
+.win-banner {
+  position: absolute;
+  left: 50%; top: 12px;
+  transform: translateX(-50%);
+  background: rgba(13,14,23,.9);
+  color: #fff;
+  border: 1px solid rgba(236,72,153,.4);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+
+
+/* ========================================== USER MENU (mobile-first) ========================================== */
+
+
+
+
+
+
+
+
+/*==========================================  FIN USER MENU ========================================== */

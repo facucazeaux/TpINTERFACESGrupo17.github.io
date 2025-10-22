@@ -26,7 +26,7 @@ const LEVELS = [
 /* ====== Ajustes de animación ====== */
 const ROTATE_MS = 240;        // duración del giro (ms)
 const BLUR_TAPS = 5;          // “fantasma” de motion-blur (0 = sin blur)
-const POP_SCALE = 0.04;       // “pop” sutil durante el giro (0 = desactivar)
+const POP_SCALE = 0.06;       // “pop” sutil durante el giro (0 = desactivar)
 const EASING = t => 1 - Math.pow(1 - t, 3); // easeOutCubic
 
 /* ====== DOM ====== */
@@ -54,7 +54,7 @@ let rotation = [0,0,0,0];   // estado final por slot (0..359)
 let order    = [0,1,2,3];   // qué cuadrante hay en cada slot
 let currentImg = null;      // HTMLImageElement
 let resizeObs = null;
-let selectedSlot = null;    // para Shift-select
+
 
 // Animaciones por slot: {from,to,start,dur}
 let anims = [null,null,null,null];
@@ -332,18 +332,7 @@ function chooseImageWithAnimation(){
   });
 }
 
-/* ====== Selección / swap ====== */
-function clearSelection(){
-  [...grid.children].forEach(t => t.classList.remove('is-selected'));
-  selectedSlot = null;
-}
-function swapOrder(a, b){
-  const level = LEVELS[levelIndex];
-  if (!level.shuffle || a === b) return;
-  [order[a], order[b]] = [order[b], order[a]];
-  redrawTile(a); redrawTile(b);
-  markCorrects(); if (!anims.some(Boolean)) checkWin();
-}
+
 
 /* ====== Rotación con animación ====== */
 function getCurrentDeg(slot){
@@ -393,34 +382,27 @@ function animationLoop(){
 
 /* ====== Correctos & Win ====== */
 function markCorrects(){
-  const level = LEVELS[levelIndex];
   for (let slot = 0; slot < pieceCount; slot++){
     const tile = grid.children[slot];
     if (!tile) continue;
     const okRotation = closeToZero(rotation[slot]);
-    const okPlace = (!level.shuffle) || (order[slot] === slot);
-    tile.classList.toggle("correct", okRotation && okPlace);
+    tile.classList.toggle("correct", okRotation);
   }
 }
 
 
 function checkWin(){
-  const level = LEVELS[levelIndex];
-
   // no ganar si hay animaciones en curso
   if (anims.some(Boolean)) return;
 
   const allZero = rotation.every(r => closeToZero(r));
-  const orderOk = !level.shuffle || order.every((q,i) => q === i);
 
-  if (allZero && orderOk){
-    // normalizar todos a múltiplos exactos
+  if (allZero){
     rotation = rotation.map(snap90);
-
     stopTimer();
 
     // Redibujar sin filtros al ganar
-    for (let i = 0; i < pieceCount; i++){
+    for (let i = 0; i < pieceCount; i++) {
       const tile = grid.children[i];
       const ctx = tile?._canvas?.getContext("2d");
       if (ctx) drawCanvasTile(ctx, currentImg, order[i], rotation[i], "", 1);
@@ -428,9 +410,118 @@ function checkWin(){
 
     btnSiguiente && (btnSiguiente.disabled = levelIndex >= LEVELS.length - 1);
     btnReiniciar && (btnReiniciar.disabled = false);
+    
     trySaveRecord();
+    if (levelIndex >= LEVELS.length - 1) {
+     triggerWinFX();
+   } else {
+   // en niveles intermedios, habilitamos "Siguiente"
+     btnSiguiente && (btnSiguiente.disabled = false);
+
   }
 }
+
+}
+
+
+function triggerWinFX(){
+  // 1) Marcar grid en estado "won"
+  grid.classList.add('won');
+
+  // 2) Flash rápido
+  const flash = document.createElement('div');
+  flash.className = 'win-flash';
+  (grid.parentElement || grid).style.position ||= 'relative';
+  (grid.parentElement || grid).appendChild(flash);
+  requestAnimationFrame(() => flash.classList.add('on'));
+  setTimeout(() => flash.classList.remove('on'), 320);
+  setTimeout(() => flash.remove(), 700);
+
+  // 3) Pop secuencial por ficha
+  const tiles = [...grid.children];
+  tiles.forEach((t, i) => {
+    setTimeout(() => {
+      t.classList.add('win-pop');
+      // sombra/halo sutil
+      t.style.boxShadow = '0 12px 40px rgba(236,72,153,.25)';
+      setTimeout(() => t.classList.remove('win-pop'), 360);
+    }, i * 60); // escalonado
+  });
+
+  // 4) Confetti simple (opcional y liviano)
+  simpleConfettiOver(grid, 900);
+
+  // 5) Mensaje accesible + banner
+  const live = document.createElement('div');
+  live.setAttribute('role','status');
+  live.setAttribute('aria-live','polite');
+  live.style.position = 'absolute';
+  live.style.width = '1px'; live.style.height = '1px';
+  live.style.overflow = 'hidden'; live.style.clipPath = 'inset(50%)';
+  live.textContent = '¡Ganaste! Puzzle resuelto.';
+  (grid.parentElement || grid).appendChild(live);
+  setTimeout(() => live.remove(), 1500);
+
+  const banner = document.createElement('div');
+  banner.className = 'win-banner';
+  banner.textContent = '¡Ganaste! 🎉';
+  (grid.parentElement || grid).appendChild(banner);
+  setTimeout(() => banner.remove(), 1800);
+
+  // 6) Haptic (si hay)
+  if (navigator.vibrate) {
+    navigator.vibrate([20, 30, 20]);
+  }
+}
+
+/* Confetti mínimo sobre un elemento */
+function simpleConfettiOver(target, durationMs=1000){
+  const rect = target.getBoundingClientRect();
+  const c = document.createElement('canvas');
+  c.width = rect.width; c.height = rect.height;
+  c.style.position = 'absolute';
+  c.style.left = rect.left + 'px';
+  c.style.top  = rect.top  + 'px';
+  c.style.pointerEvents = 'none';
+  c.style.zIndex = 9999;
+
+  document.body.appendChild(c);
+  const ctx = c.getContext('2d');
+
+  const N = 60; // partículas
+  const parts = Array.from({length:N}, () => ({
+    x: Math.random()*c.width,
+    y: -10 - Math.random()*40,
+    vx: (Math.random()-0.5)*1.2,
+    vy: 1 + Math.random()*2.4,
+    r: 2 + Math.random()*3.5,
+    rot: Math.random()*Math.PI,
+    vr: (Math.random()-0.5)*0.2,
+    // tres colores base sin setear estilos globales
+    col: ['#EC4899','#22D3EE','#FDE047'][Math.floor(Math.random()*3)]
+  }));
+
+  const t0 = performance.now();
+  function tick(){
+    const t = performance.now() - t0;
+    ctx.clearRect(0,0,c.width,c.height);
+    parts.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      p.vy += 0.02; // gravedad
+      p.rot += p.vr;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.col;
+      ctx.fillRect(-p.r, -p.r, p.r*2, p.r*2);
+      ctx.restore();
+    });
+    if (t < durationMs) requestAnimationFrame(tick);
+    else c.remove();
+  }
+  requestAnimationFrame(tick);
+}
+
 
 
 /* ====== Construir nivel ====== */
@@ -443,9 +534,7 @@ async function setupLevel(preview = false) {
   currentImg = await loadImage(imageSrc);
 
   // Definir orden y rotaciones según cantidad de fichas
-  order = level.shuffle
-    ? shuffled([...Array(pieceCount).keys()])
-    : [...Array(pieceCount).keys()];
+  order = [...Array(pieceCount).keys()];
 
   rotation = Array.from({ length: pieceCount }, () => randRot());
   if (rotation.every(r => r === 0))
@@ -471,41 +560,6 @@ async function setupLevel(preview = false) {
     tile.appendChild(canvas);
     tile._canvas = canvas;
 
-    // --- Drag & drop + Shift-select ---
-    if (level.shuffle) {
-      tile.setAttribute("draggable", "true");
-
-      tile.addEventListener("dragstart", (e) =>
-        e.dataTransfer.setData("text/plain", String(slot))
-      );
-      tile.addEventListener("dragover", (e) => e.preventDefault());
-      tile.addEventListener("drop", (e) => {
-        e.preventDefault();
-        if (!running) return;
-        const from = parseInt(e.dataTransfer.getData("text/plain"));
-        if (!Number.isNaN(from)) swapOrder(from, slot);
-      });
-
-      tile.addEventListener(
-        "click",
-        (ev) => {
-          if (!running) return;
-          if (ev.shiftKey) {
-            if (selectedSlot === null) {
-              selectedSlot = slot;
-              tile.classList.add("is-selected");
-            } else {
-              const other = selectedSlot;
-              clearSelection();
-              swapOrder(other, slot);
-            }
-            ev.stopImmediatePropagation();
-          }
-        },
-        true
-      );
-    }
-
     // --- Rotaciones con animación ---
     tile.addEventListener("click", () => rotate(slot, -90));
     tile.addEventListener("contextmenu", (e) => {
@@ -516,13 +570,17 @@ async function setupLevel(preview = false) {
     grid.appendChild(tile);
   }
 
+
+
+
+
   // Primer render
   redrawAll();
 
   // Reset visual
   document.querySelector(".time")?.classList.remove("danger", "timeout");
   highlightActiveThumb();
-  clearSelection();
+  
 
   // UI inicial (según preview o no)
   btnSiguiente && (btnSiguiente.disabled = true);

@@ -508,3 +508,68 @@ document.addEventListener('DOMContentLoaded', () => {
     applyPosition();
   });
 });
+
+
+/* ========================================= MENÚ USUARIO ============================================================= */
+// Panel derecho (.user-menu) con su propio backdrop.
+// Similar a side-menu: openUserMenu/closeUserMenu/toggleUserMenu manejan clases, aria y bloqueo de scroll.
+// Se cierra automáticamente al seleccionar logout o cualquier opción (a modo de simulación).
+
+const userBtn = document.getElementById('menu-user-btn');
+const userMenu = document.getElementById('menu-user');
+const userBackdrop = document.getElementById('menu-user-backdrop');
+const closeUserBtn = document.querySelector('.close-user-menu');
+const logoutBtn = document.getElementById('logoutBtn');
+
+function openUserMenu(){
+  // si está abierto el menu de categorias, cerrarlo para evitar superposición
+  if (sideMenu.classList.contains('open')) closeMenu();
+
+  userMenu.classList.add('open');
+  userBackdrop.classList.add('show');
+  document.body.classList.add('menu-open');
+  userBtn?.setAttribute('aria-expanded','true');
+  userMenu?.setAttribute('aria-hidden','false');
+}
+
+function closeUserMenu(){
+  userMenu.classList.remove('open');
+  userBackdrop.classList.remove('show');
+  // si no hay otro menú abierto, quitar bloqueo de scroll
+  if (!sideMenu.classList.contains('open')) document.body.classList.remove('menu-open');
+  userBtn?.setAttribute('aria-expanded','false');
+  userMenu?.setAttribute('aria-hidden','true');
+}
+
+function toggleUserMenu(){
+  userMenu.classList.contains('open') ? closeUserMenu() : openUserMenu();
+}
+
+userBtn?.addEventListener('click', toggleUserMenu);
+userBtn?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleUserMenu(); }
+});
+
+userBackdrop?.addEventListener('click', closeUserMenu);
+closeUserBtn?.addEventListener('click', closeUserMenu);
+
+// Cerrar al seleccionar una opción (simulamos acciones mínimas)
+userMenu?.addEventListener('click', (e) => {
+  const link = e.target.closest('.user-link');
+  if (!link) return;
+  // Si es el botón de logout, simulamos cierre
+  if (link.classList.contains('logout')) {
+    // pequeña simulación: limpiar y recargar (o redirigir)
+    closeUserMenu();
+    alert('Sesión cerrada (simulación).');
+    // aquí podrías redirigir: window.location.href = 'login.html';
+    return;
+  }
+  // para el resto de opciones, cerramos el panel
+  closeUserMenu();
+});
+
+// A11y: permitir navegación por teclado dentro del panel
+userMenu?.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeUserMenu();
+});

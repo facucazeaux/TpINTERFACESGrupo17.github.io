@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BLOCKA — Rompecabezas por rotación</title>
   <!-- Reuso estilos generales del sitio -->
-  
+
   <!-- Estilos específicos del juego -->
   <link rel="stylesheet" href="blocka.css" />
   <link rel="stylesheet" href="EstiloJuego.css" />
@@ -16,15 +16,22 @@
 <body>
   <!-- ========= HEADER (mismo markup que el sitio) ========= -->
   <header class="header">
+
+    <!-- Contenedor general -->
     <div class="header-container">
+
+      <!-- Menú hamburguesa -->
       <span id="hamburger" class="menu-hamburguesa" role="button" tabindex="0" aria-label="Abrir menú de categorías"
         aria-controls="menu-categorias" aria-expanded="false">☰</span>
 
+
+      <!-- Logo y título -->
       <a class="titulo-imagen" href="index.html">
         <img src="images/logo.png" alt="Logo El Rincón del Laucha" class="logo">
         <span class="titulo">EL RINCON DEL LAUCHA</span>
       </a>
 
+      <!-- Barra de búsqueda -->
       <div class="container-busqueda">
         <div class="busqueda-bar">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -32,10 +39,32 @@
         </div>
       </div>
 
-      <a class="login-btn" href="login.html">Iniciar sesión</a>
+      <!-- Menu Usuario -->
+      <span id="menu-user-btn" class="menuUser-btn" aria-label="Abrir menú de usuario" aria-controls="menu-user"
+        aria-expanded="false"><i class="fa-solid fa-user"></i></span>
     </div>
+
   </header>
 
+  <!-- Menú usuario: panel deslizante desde la derecha -->
+  <nav id="menu-user" class="user-menu" aria-hidden="true">
+    <div class="user-menu-header">
+      <strong>Cuenta</strong>
+      <button class="close-user-menu" aria-label="Cerrar menú">&times;</button>
+    </div>
+    <div class="user-menu-content">
+      <a class="user-link" href="#">Mis datos</a>
+      <a class="user-link" href="#">Configuración</a>
+      <a class="user-link" href="#">Soporte</a>
+      <button class="user-link logout" id="logoutBtn">Cerrar sesión</button>
+    </div>
+  </nav>
+
+  <!-- Backdrop específico para menú usuario -->
+  <div id="menu-user-backdrop" class="menu-backdrop user-backdrop" aria-hidden="true"></div>
+
+
+  <!-- Menú categorias: panel deslizante desde la izquierda -->
   <nav id="menu-categorias" class="side-menu" aria-hidden="true">
     <div class="side-menu-header">
       <strong>Categorías</strong>
@@ -60,7 +89,8 @@
   <!-- Fondo para cerrar al hacer click afuera -->
   <div id="menu-backdrop" class="menu-backdrop" aria-hidden="true"></div>
 
-  <main class="page">
+
+  <div class="page">
 
 
     <div class="breadcrumb">
@@ -97,13 +127,13 @@
 
       <div class="nivel-ui">
         <div><b>Nivel:</b> <span id="nivel">1</span> / <span id="nivelesTotales">3</span></div>
-       <label class="pcnt-label" for="pieceCount">Fichas:</label>
-       <select name="pieceCount" id="pieceCount">
-        <option value="4">4</option>
-        <option value="6">6</option>
-        <option value="8">8</option>
+        <label class="pcnt-label" for="pieceCount">Fichas:</label>
+        <select name="pieceCount" id="pieceCount">
+          <option value="4">4</option>
+          <option value="6">6</option>
+          <option value="8">8</option>
 
-      
+
         </select>
       </div>
 
@@ -133,87 +163,82 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <section class="galeria">
+
+    <div id="thumbs" class="thumbs"></div>
+  </section>
+
+  <!-- Dos columnas: descripción e instrucciones (como Peg) -->
+  <div class="pegSolitaire">
+
+
+
+    <div class="descripcion">
+      <h2>Blocka — rompecabezas por rotación</h2>
+      <p>
+        En Blocka, tu misión es simple: restaurar la imagen... pero tus ojos te van a engañar.
+        Rotá, analizá y vencé al reloj mientras las piezas se distorsionan con filtros y efectos.
+        ¿Podés completar los tres niveles y alcanzar el récord más rápido?
+      </p>
     </div>
 
-      <section class="galeria">
-  
-  <div id="thumbs" class="thumbs"></div>
-</section>
+    <div class="instrucciones">
+      <h2 style="text-align:center;">CÓMO JUGAR</h2>
+      <ul>
+        <li>
+          <span>Rotar izq</span>
+          <div class="iconGroup">
+            <img src="img/Left Click.png" alt="Click izquierdo"> <!-- izq -90° -->
 
-    <!-- Dos columnas: descripción e instrucciones (como Peg) -->
-    <div class="pegSolitaire">
-
-        
-      
-      <div class="descripcion">
-        <h2>Blocka — rompecabezas por rotación</h2>
-        <p>
-          Elegí una imagen aleatoria, dividida en 4 cuadrantes. Rotá cada pieza (izq/derecha)
-          y, en niveles avanzados, movelas de lugar para recomponer la imagen.
-          Al completar, se quitan los filtros y se guarda tu récord local.
-        </p>
-      </div>
-
-      <div class="instrucciones">
-        <h2 style="text-align:center;">CÓMO JUGAR</h2>
-        <ul>
-          <li>
-            <span>Rotar izq</span>
-            <div class="iconGroup">
-              <img src="img/Left Click.png" alt="Click izquierdo"> <!-- izq -90° -->
-             
-            </div>
-            <li>
-             <span>Rotar der</span>
-             <div class="iconGroup">
-              
-              <img src="img/Right Click.png" alt="Click derecho"> <!-- der +90° -->
-            </div>
-          </li>
-          </li>
-          <li>
-            <span>Mover pieza</span>
-            <div class="iconGroup">
-              <img src="img/Arrastrar.png" alt="Arrastrar y soltar">
-              
-            </div>
-          </li>
-         
-        </ul>
-      </div>
-    </div>
-
-    
-
-
-
-
-    </section>
-
-
-      <!-- carrusel de fotos representativa de el juego -->
-      <section class="carrusel-blocka">
-        <h2><i class="fa-solid fa-camera"></i> Imágenes representativas del juego</h2>
-      
-        <div class="carrusel-container">
-          <button class="carrusel-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
-      
-          <div class="carrusel">
-            <div class="carrusel-item"><img src="images/blocka.png" alt="Tablero de Blocka nivel fácil"></div>
-            <div class="carrusel-item"><img src="images/blocka2.png" alt="Blocka en nivel avanzado"></div>
-            <div class="carrusel-item"><img src="images/blocka3.png" alt="Jugador resolviendo puzzle Blocka"></div>
-            <div class="carrusel-item"><img src="images/blocka4.png" alt="Blocka con fichas giradas"></div>
           </div>
-      
-          <button class="carrusel-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-      </section>
 
-  
-  
+        <li>
+        <li>
+
+          <span>Rotar der</span>
+          <div class="iconGroup">
+
+            <img src="img/Right Click.png" alt="Click derecho"> <!-- der +90° -->
+          </div>
+        </li>
+
+      </ul>
+    </div>
+  </div>
 
 
-<div class="reseñas">
+
+
+
+
+  </section>
+
+
+  <!-- carrusel de fotos representativa de el juego -->
+  <section class="carrusel-blocka">
+    <h2><i class="fa-solid fa-camera"></i> Imágenes representativas del juego</h2>
+
+    <div class="carrusel-container">
+      <button class="carrusel-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+
+      <div class="carrusel">
+        <div class="carrusel-item"><img src="images/blocka.png" alt="Tablero de Blocka nivel fácil"></div>
+        <div class="carrusel-item"><img src="images/blocka2.png" alt="Blocka en nivel avanzado"></div>
+        <div class="carrusel-item"><img src="images/blocka3.png" alt="Jugador resolviendo puzzle Blocka"></div>
+        <div class="carrusel-item"><img src="images/blocka4.png" alt="Blocka con fichas giradas"></div>
+      </div>
+
+      <button class="carrusel-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+  </section>
+
+
+
+
+
+  <div class="reseñas">
     <h2>Dejá tu reseña del juego</h2>
 
     <div class="formularioReseña">
@@ -240,7 +265,8 @@
           <h3>Adriel Lopez</h3>
         </div>
         <div class="contenidoReseña">
-          <p>Me gustó que tenga instrucciones claras, aprendí rápido. gustó que tenga instrucciones claras, aprendí rápido.</p>
+          <p>Me gustó que tenga instrucciones claras, aprendí rápido. gustó que tenga instrucciones claras, aprendí
+            rápido.</p>
           <img src="img/like.png" alt="Like" class="iconoLike">
         </div>
       </div>
@@ -251,7 +277,8 @@
           <h3>Lautaro Bozas</h3>
         </div>
         <div class="contenidoReseña">
-          <p>Me gustó que tenga instrucciones claras, aprendí rápido. gustó que tenga instrucciones claras, aprendí rápido.</p>
+          <p>Me gustó que tenga instrucciones claras, aprendí rápido. gustó que tenga instrucciones claras, aprendí
+            rápido.</p>
           <img src="img/like.png" alt="Like" class="iconoLike">
         </div>
       </div>
@@ -262,7 +289,7 @@
           <h3>Esteban Rodríguez</h3>
         </div>
         <div class="contenidoReseña">
-          <p>Me divertí mucho jugando en su página. Le recomendaré a mis amigos.</p>
+          <p>Equipo el blocka este! sigan subiendo este tipo de juegos.</p>
           <img src="img/like.png" alt="Like" class="iconoLike">
         </div>
       </div>
@@ -273,7 +300,7 @@
           <h3>Santiago Franco</h3>
         </div>
         <div class="contenidoReseña">
-          <p>Muy buen juego con controles intuitivos, fácil de aprender y divertido de jugar.</p>
+          <p>Muy buen juego con controles intuitivos, fácil de aprender y divertido de jugar. Falta sumar mas niveles de dificultad</p>
           <img src="img/like.png" alt="Like" class="iconoLike">
         </div>
       </div>
@@ -283,7 +310,7 @@
   </div>
 
 
-    
+
   </main>
 
 
